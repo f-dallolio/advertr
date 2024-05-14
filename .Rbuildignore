@@ -1,2 +1,4 @@
 ^advertr\.Rproj$
 ^\.Rproj\.user$
+^temp_scripts$
+^temp_files$
