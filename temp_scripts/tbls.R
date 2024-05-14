@@ -1,8 +1,13 @@
+library(helprs)
+library(tidyverse)
+library(advertr)
+library(fs)
+library(arrow)
+
 dir <- "/mnt/sata_data_1/adintel_parquet/year_files/"
 paths <- dir_ls(dir, recurse = TRUE, type = "file")
 
-library(tidyverse)
-
+tictoc::tic()
 df <- paths |>
   path_common_remove(dir = TRUE) |>
   path_split() |>
@@ -18,35 +23,22 @@ df <- paths |>
          col_names = map(tbl, names),
          col_types = map(tbl, get_cols_call),
          .before = tbl) |>
-  mutate(splitter = paste("year", year, sep = "_")) |>
-  nest(.by = splitter) |>
-  deframe()
+  mutate(file = str_replace_all(file, "NetworkTV", "NationalTV"))
+# |>
+#   mutate(splitter = paste("year", year, sep = "_")) |>
+#   nest(.by = splitter) |>
+  # deframe()
+tictoc::toc()
 
+df$path
 
-purrr::list_rbind(df) |> mutate(file = file |> str_replace_all("NetworkTV", "NationalTV"))
-
-x <- df[[1]] |>
+df |>
   filter(type == "Occurrences",
-         file |> str_detect("SpotTV")) |>
-  # pluck("nrows")
-  pluck("tbl", 1)
+         file |> str_detect("TV")) |>
+  select(path) |>
+  write_csv("temp_files/tv_paths.csv")
 
-
+tictoc::tic()
 x |> group_by(MediaTypeID, AdDate) |>
-  write_dataset("temp_scripts/test")
-
-
-
-arrow::wr
-
-x |>
-  group_by(MediaTypeID) |>
-  summarise(n = n()) |>
-  collect()
-
-.Last.value$n |> sum()
-n
-  collect()
-  mutate(rows = nrow())
-  summarise(n = max(seq_along(MediaTypeID))) |>
-  collect()
+  write_dataset("temp_files/test")
+tictoc::toc()
